@@ -1,0 +1,61 @@
+networks:
+  db:
+
+
+volumes:
+  mysql-data:
+
+
+x-template: &flyway-template
+  image: flyway/flyway:7.15.0
+  volumes:
+    - ./migrations:/flyway/sql
+    - ./docker/flyway/conf:/flyway/conf
+  depends_on:
+    - db
+  profiles:
+    - flyway
+  networks:
+    - db
+
+services:
+  app:
+    build:
+      context: .
+      target: final
+    networks:
+      - db
+
+  db:
+    image: mysql:5.7.44
+    platform: linux/x86_64
+    volumes:
+      - mysql-data:/var/lib/mysql/
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: sample
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    ports:
+      - 3306:3306
+    networks:
+      - db
+
+  flyway-baseline:
+    <<: *flyway-template
+    command: baseline
+
+  flyway-clean:
+    <<: *flyway-template
+    command: clean
+
+  flyway-migrate:
+    <<: *flyway-template
+    command: migrate
+
+  flyway-info:
+    <<: *flyway-template
+    command: info
+
+  flyway-repair:
+    <<: *flyway-template
+    command: repair
