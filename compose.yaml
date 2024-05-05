@@ -1,3 +1,5 @@
+name: flyway-sandbox
+
 networks:
   db:
 
